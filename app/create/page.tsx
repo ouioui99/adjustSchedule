@@ -1,30 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { ArrowLeft, Calendar as CalendarIcon, X } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { ArrowLeft, Calendar as CalendarIcon, X } from "lucide-react";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function CreateEvent() {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date && selectedDates.length < 5) {
-      const dateString = date.toISOString().split('T')[0];
-      const existingDate = selectedDates.find(d => d.toISOString().split('T')[0] === dateString);
-      
+      const dateString = date.toISOString().split("T")[0];
+      const existingDate = selectedDates.find(
+        (d) => d.toISOString().split("T")[0] === dateString
+      );
+
       if (!existingDate) {
         setSelectedDates([...selectedDates, date]);
       }
+    }
+
+    if (selectedDates.length + 1 >= 5) {
+      setShowCalendar(false);
     }
   };
 
@@ -34,7 +52,7 @@ export default function CreateEvent() {
 
   const handleSubmit = () => {
     if (!title.trim() || selectedDates.length === 0) {
-      alert('イベント名と候補日を入力してください');
+      alert("イベント名と候補日を入力してください");
       return;
     }
 
@@ -43,24 +61,26 @@ export default function CreateEvent() {
       id: eventId,
       title: title.trim(),
       description: description.trim(),
-      proposedDates: selectedDates.map(date => date.toISOString().split('T')[0]),
+      proposedDates: selectedDates.map(
+        (date) => date.toISOString().split("T")[0]
+      ),
       participants: {},
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
-    const existingEvents = JSON.parse(localStorage.getItem('events') || '[]');
+    const existingEvents = JSON.parse(localStorage.getItem("events") || "[]");
     existingEvents.push(newEvent);
-    localStorage.setItem('events', JSON.stringify(existingEvents));
+    localStorage.setItem("events", JSON.stringify(existingEvents));
 
     router.push(`/event/${eventId}`);
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
@@ -75,7 +95,9 @@ export default function CreateEvent() {
               戻る
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-foreground">新しいイベントを作成</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            新しいイベントを作成
+          </h1>
         </div>
 
         <div className="space-y-6">
@@ -127,11 +149,18 @@ export default function CreateEvent() {
               {/* Selected Dates */}
               {selectedDates.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-foreground mb-2">選択された候補日</h4>
+                  <h4 className="text-sm font-medium text-foreground mb-2">
+                    選択された候補日
+                  </h4>
                   <div className="space-y-2">
                     {selectedDates.map((date, index) => (
-                      <div key={index} className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-2">
-                        <span className="text-primary-foreground">{formatDate(date)}</span>
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-2"
+                      >
+                        <span className="text-primary-foreground">
+                          {formatDate(date)}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -146,30 +175,17 @@ export default function CreateEvent() {
                 </div>
               )}
 
-              {/* Calendar Toggle */}
+              {/* Calendar Toggle (open modal) */}
               <Button
                 variant="outline"
-                onClick={() => setShowCalendar(!showCalendar)}
+                onClick={() => setShowCalendar(true)}
                 disabled={selectedDates.length >= 5}
                 className="w-full"
               >
                 <CalendarIcon className="w-4 h-4 mr-2" />
-                {showCalendar ? 'カレンダーを閉じる' : 'カレンダーから日付を選択'}
-                {selectedDates.length >= 5 && ' （最大5日）'}
+                カレンダーから日付を選択
+                {selectedDates.length >= 5 && " （最大5日）"}
               </Button>
-
-              {/* Calendar */}
-              {showCalendar && (
-                <div className="mt-4 flex justify-center">
-                  <Calendar
-                    mode="single"
-                    selected={undefined}
-                    onSelect={handleDateSelect}
-                    disabled={(date) => date < new Date() || selectedDates.length >= 5}
-                    className="rounded-md border"
-                  />
-                </div>
-              )}
 
               <p className="text-sm text-muted-foreground mt-2">
                 選択済み: {selectedDates.length}/5日
@@ -179,7 +195,7 @@ export default function CreateEvent() {
 
           {/* Submit Button */}
           <div className="pt-4">
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={!title.trim() || selectedDates.length === 0}
               size="lg"
@@ -190,6 +206,61 @@ export default function CreateEvent() {
           </div>
         </div>
       </div>
+
+      {/* Calendar Modal */}
+      <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>候補日を選択</DialogTitle>
+          </DialogHeader>
+
+          {/* 高さを固定してカレンダーが動かないようにする */}
+          <div className="flex justify-center py-4 min-h-[360px]">
+            <Calendar
+              mode="single"
+              selected={undefined}
+              onSelect={handleDateSelect}
+              disabled={(date) =>
+                date < new Date() || selectedDates.length >= 5
+              }
+              className="rounded-md border"
+            />
+          </div>
+
+          {/* 選択された候補日のリスト */}
+          {selectedDates.length > 0 && (
+            <div className="mt-4 max-h-40 overflow-y-auto">
+              <h4 className="text-sm font-medium text-foreground mb-2">
+                選択された候補日
+              </h4>
+              <div className="space-y-2">
+                {selectedDates.map((date, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-primary-foreground">
+                      {formatDate(date)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeDateAt(index)}
+                      className="text-primary hover:text-primary/80 p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-sm text-muted-foreground mt-2">
+            選択済み: {selectedDates.length}/5日
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
