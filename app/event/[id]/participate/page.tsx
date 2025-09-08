@@ -1,15 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Calendar as CalendarIcon, X, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ArrowLeft,
+  Calendar as CalendarIcon,
+  X,
+  AlertCircle,
+} from "lucide-react";
+import { CalendarDialog } from "@/app/compnents/CalendarDialog";
+import { log } from "console";
 
 interface Event {
   id: string;
@@ -32,51 +45,65 @@ export default function Participate() {
   const params = useParams();
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState("");
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [additionalDates, setAdditionalDates] = useState<Date[]>([]);
   const [notAttending, setNotAttending] = useState(false);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
-    const savedEvents = JSON.parse(localStorage.getItem('events') || '[]');
+    const savedEvents = JSON.parse(localStorage.getItem("events") || "[]");
     const foundEvent = savedEvents.find((e: Event) => e.id === params.id);
     setEvent(foundEvent || null);
   }, [params.id]);
 
   const handleDateToggle = (date: string) => {
     if (selectedDates.includes(date)) {
-      setSelectedDates(selectedDates.filter(d => d !== date));
+      setSelectedDates(selectedDates.filter((d) => d !== date));
     } else {
       setSelectedDates([...selectedDates, date]);
     }
   };
 
-  const handleAdditionalDateSelect = (date: Date | undefined) => {
-    if (date && additionalDates.length < 3) {
-      const dateString = date.toISOString().split('T')[0];
-      const existingDate = additionalDates.find(d => d.toISOString().split('T')[0] === dateString);
-      const isAlreadyProposed = event?.proposedDates.includes(dateString);
-      
-      if (!existingDate && !isAlreadyProposed) {
-        setAdditionalDates([...additionalDates, date]);
-      }
-    }
+  // 追加日程の選択
+  const handleAdditionalDateSelect = (dates: Date[] | undefined) => {
+    if (!dates) return;
+
+    // 最大3日制限
+    const limitedDates = dates.slice(0, 3);
+
+    // 既存候補日や既に選択済みを除外
+    const filteredDates = limitedDates.filter((d) => {
+      const dateString = d.toISOString().split("T")[0];
+      return !getAllProposedDates().includes(dateString);
+    });
+
+    setAdditionalDates(filteredDates);
   };
 
   const removeAdditionalDate = (index: number) => {
     setAdditionalDates(additionalDates.filter((_, i) => i !== index));
   };
 
+  const handleConfirm = () => {
+    setShowCalendar(false);
+  };
+
   const handleSubmit = () => {
     if (!nickname.trim()) {
-      alert('ニックネームを入力してください');
+      alert("ニックネームを入力してください");
       return;
     }
 
-    if (!notAttending && selectedDates.length === 0 && additionalDates.length === 0) {
-      alert('参加可能な日程を選択するか、追加日程を提案するか、不参加を選択してください');
+    if (
+      !notAttending &&
+      selectedDates.length === 0 &&
+      additionalDates.length === 0
+    ) {
+      alert(
+        "参加可能な日程を選択するか、追加日程を提案するか、不参加を選択してください"
+      );
       return;
     }
 
@@ -84,44 +111,46 @@ export default function Participate() {
 
     const participantData = {
       availableDates: selectedDates,
-      additionalDates: additionalDates.map(date => date.toISOString().split('T')[0]),
+      additionalDates: additionalDates.map(
+        (date) => date.toISOString().split("T")[0]
+      ),
       notAttending,
-      ...(notAttending && reason.trim() && { reason: reason.trim() })
+      ...(notAttending && reason.trim() && { reason: reason.trim() }),
     };
 
     const updatedEvent = {
       ...event,
       participants: {
         ...event.participants,
-        [nickname.trim()]: participantData
-      }
+        [nickname.trim()]: participantData,
+      },
     };
 
-    const savedEvents = JSON.parse(localStorage.getItem('events') || '[]');
-    const updatedEvents = savedEvents.map((e: Event) => 
+    const savedEvents = JSON.parse(localStorage.getItem("events") || "[]");
+    const updatedEvents = savedEvents.map((e: Event) =>
       e.id === event.id ? updatedEvent : e
     );
-    localStorage.setItem('events', JSON.stringify(updatedEvents));
+    localStorage.setItem("events", JSON.stringify(updatedEvents));
 
     router.push(`/event/${event.id}`);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
   const formatDateFromDate = (date: Date) => {
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
@@ -144,7 +173,9 @@ export default function Participate() {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 mx-auto text-orange-500 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">このイベントは既に確定済みです</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              このイベントは既に確定済みです
+            </h1>
             <p className="text-gray-600 mb-2">確定した日程:</p>
             <p className="text-xl font-semibold text-orange-600 mb-6">
               {formatDate(event.finalDate)}
@@ -162,9 +193,9 @@ export default function Participate() {
 
   const getAllProposedDates = () => {
     const allDates = new Set(event.proposedDates);
-    Object.values(event.participants).forEach(participant => {
+    Object.values(event.participants).forEach((participant) => {
       if (participant.additionalDates) {
-        participant.additionalDates.forEach(date => allDates.add(date));
+        participant.additionalDates.forEach((date) => allDates.add(date));
       }
     });
     return Array.from(allDates).sort();
@@ -224,7 +255,10 @@ export default function Participate() {
                     }
                   }}
                 />
-                <label htmlFor="not-attending" className="text-sm font-medium text-destructive">
+                <label
+                  htmlFor="not-attending"
+                  className="text-sm font-medium text-destructive"
+                >
                   都合が悪く参加できません
                 </label>
               </div>
@@ -259,20 +293,28 @@ export default function Participate() {
                 <CardContent>
                   <div className="space-y-3">
                     {getAllProposedDates().map((date, index) => {
-                      const isOriginalProposal = event.proposedDates.includes(date);
-                      const proposer = !isOriginalProposal ? 
-                        Object.entries(event.participants).find(([_, data]) => 
-                          data.additionalDates?.includes(date)
-                        )?.[0] : null;
+                      const isOriginalProposal =
+                        event.proposedDates.includes(date);
+                      const proposer = !isOriginalProposal
+                        ? Object.entries(event.participants).find(([_, data]) =>
+                            data.additionalDates?.includes(date)
+                          )?.[0]
+                        : null;
 
                       return (
-                        <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/10">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/10"
+                        >
                           <Checkbox
                             id={`date-${index}`}
                             checked={selectedDates.includes(date)}
                             onCheckedChange={() => handleDateToggle(date)}
                           />
-                          <label htmlFor={`date-${index}`} className="flex-1 cursor-pointer">
+                          <label
+                            htmlFor={`date-${index}`}
+                            className="flex-1 cursor-pointer"
+                          >
                             <div className="font-medium text-card-foreground">
                               {formatDate(date)}
                             </div>
@@ -301,11 +343,18 @@ export default function Participate() {
                   {/* Selected Additional Dates */}
                   {additionalDates.length > 0 && (
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-foreground mb-2">提案した追加日程</h4>
+                      <h4 className="text-sm font-medium text-foreground mb-2">
+                        提案した追加日程
+                      </h4>
                       <div className="space-y-2">
                         {additionalDates.map((date, index) => (
-                          <div key={index} className="flex items-center justify-between bg-secondary/10 border border-secondary/30 rounded-lg px-3 py-2">
-                            <span className="text-secondary-foreground">{formatDateFromDate(date)}</span>
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-secondary/10 border border-secondary/30 rounded-lg px-3 py-2"
+                          >
+                            <span className="text-primary-foreground">
+                              {formatDateFromDate(date)}
+                            </span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -328,27 +377,9 @@ export default function Participate() {
                     className="w-full"
                   >
                     <CalendarIcon className="w-4 h-4 mr-2" />
-                    {showCalendar ? 'カレンダーを閉じる' : '追加日程を提案する'}
-                    {additionalDates.length >= 3 && ' （最大3日）'}
+                    追加日程を提案する
+                    {additionalDates.length >= 3 && " （最大3日）"}
                   </Button>
-
-                  {/* Calendar */}
-                  {showCalendar && (
-                    <div className="mt-4 flex justify-center">
-                      <Calendar
-                        mode="single"
-                        selected={undefined}
-                        onSelect={handleAdditionalDateSelect}
-                        disabled={(date) => {
-                          const dateString = date.toISOString().split('T')[0];
-                          return date < new Date() || 
-                                 additionalDates.length >= 3 ||
-                                 getAllProposedDates().includes(dateString);
-                        }}
-                        className="rounded-md border"
-                      />
-                    </div>
-                  )}
 
                   <p className="text-sm text-muted-foreground mt-2">
                     追加提案: {additionalDates.length}/3日
@@ -360,7 +391,7 @@ export default function Participate() {
 
           {/* Submit Button */}
           <div className="pt-4">
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={!nickname.trim()}
               size="lg"
@@ -368,6 +399,17 @@ export default function Participate() {
             >
               参加登録を完了する
             </Button>
+            <CalendarDialog
+              open={showCalendar}
+              onOpenChange={setShowCalendar}
+              selectedDates={additionalDates}
+              onDateSelect={handleAdditionalDateSelect}
+              onRemoveDate={removeAdditionalDate}
+              onConfirm={handleConfirm}
+              formatDate={formatDateFromDate}
+              maxSelectable={3} // ← 参加画面は最大3日
+              getAllProposedDates={getAllProposedDates}
+            />
           </div>
         </div>
       </div>

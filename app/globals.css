@@ -11,7 +11,7 @@
     --popover: #ffffff;
     --popover-foreground: #141c33;
     --primary: #2f456f;
-    --primary-foreground: #ffffff;
+    --primary-foreground: #141c33;
     --secondary: #5374ac;
     --secondary-foreground: #ffffff;
     --muted: #8bafd0;
@@ -39,9 +39,10 @@
     --popover: #2f456f;
     --popover-foreground: #eff5fa;
     --primary: #8bafd0;
-    --primary-foreground: #141c33;
+    /* --primary-foreground: #141c33; */
+    --primary-foreground: #f1f5f9;
     --secondary: #5374ac;
-    --secondary-foreground: #eff5fa;
+    --secondary-foreground: #141c33;
     --muted: #2f456f;
     --muted-foreground: #8bafd0;
     --accent: #5374ac;

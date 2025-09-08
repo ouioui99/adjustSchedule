@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Calendar, Users } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Plus, Calendar, Users } from "lucide-react";
 
 interface Event {
   id: string;
@@ -27,7 +33,7 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
-    const savedEvents = localStorage.getItem('events');
+    const savedEvents = localStorage.getItem("events");
     if (savedEvents) {
       setEvents(JSON.parse(savedEvents));
     }
@@ -35,11 +41,11 @@ export default function Home() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
@@ -59,7 +65,10 @@ export default function Home() {
         {/* Create Event Button */}
         <div className="text-center mb-8">
           <Link href="/create">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3">
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-secondary-foreground px-8 py-3"
+            >
               <Plus className="w-5 h-5 mr-2" />
               新しいイベントを作成
             </Button>
@@ -69,13 +78,20 @@ export default function Home() {
         {/* Events List */}
         {events.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground mb-6">作成されたイベント</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-6">
+              作成されたイベント
+            </h2>
             {events.map((event) => (
-              <Card key={event.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={event.id}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl text-card-foreground">{event.title}</CardTitle>
+                      <CardTitle className="text-xl text-card-foreground">
+                        {event.title}
+                      </CardTitle>
                       {event.description && (
                         <CardDescription className="mt-2 text-muted-foreground">
                           {event.description}
@@ -103,7 +119,9 @@ export default function Home() {
 
                   {event.finalDate ? (
                     <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-accent-foreground font-medium">確定した日程</p>
+                      <p className="text-sm text-accent-foreground font-medium">
+                        確定した日程
+                      </p>
                       <p className="text-lg font-semibold text-accent-foreground mt-1">
                         {formatDate(event.finalDate)}
                       </p>
@@ -111,7 +129,10 @@ export default function Home() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                       {event.proposedDates.slice(0, 3).map((date, index) => (
-                        <div key={index} className="text-sm text-muted-foreground bg-muted/20 rounded px-2 py-1">
+                        <div
+                          key={index}
+                          className="text-sm text-muted-foreground bg-muted/20 rounded px-2 py-1"
+                        >
                           {formatDate(date)}
                         </div>
                       ))}
@@ -130,7 +151,10 @@ export default function Home() {
                       </Button>
                     </Link>
                     <Link href={`/event/${event.id}/participate`}>
-                      <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                      <Button
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90 text-secondary-foreground"
+                      >
                         参加登録
                       </Button>
                     </Link>
@@ -144,8 +168,12 @@ export default function Home() {
         {events.length === 0 && (
           <div className="text-center py-12">
             <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg">まだイベントが作成されていません</p>
-            <p className="text-muted-foreground mt-2">上のボタンから新しいイベントを作成してください</p>
+            <p className="text-muted-foreground text-lg">
+              まだイベントが作成されていません
+            </p>
+            <p className="text-muted-foreground mt-2">
+              上のボタンから新しいイベントを作成してください
+            </p>
           </div>
         )}
       </div>

@@ -1,11 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Users, Calendar, Check, Crown, Copy, Share2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ArrowLeft,
+  Users,
+  Calendar,
+  Check,
+  Crown,
+  Copy,
+  Share2,
+} from "lucide-react";
 
 interface Event {
   id: string;
@@ -31,20 +45,20 @@ export default function EventDetail() {
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
-    const savedEvents = JSON.parse(localStorage.getItem('events') || '[]');
+    const savedEvents = JSON.parse(localStorage.getItem("events") || "[]");
     const foundEvent = savedEvents.find((e: Event) => e.id === params.id);
     setEvent(foundEvent || null);
   }, [params.id]);
 
   const handleFinalizeDate = (date: string) => {
     if (!event) return;
-    
+
     const updatedEvent = { ...event, finalDate: date };
-    const savedEvents = JSON.parse(localStorage.getItem('events') || '[]');
-    const updatedEvents = savedEvents.map((e: Event) => 
+    const savedEvents = JSON.parse(localStorage.getItem("events") || "[]");
+    const updatedEvents = savedEvents.map((e: Event) =>
       e.id === event.id ? updatedEvent : e
     );
-    localStorage.setItem('events', JSON.stringify(updatedEvents));
+    localStorage.setItem("events", JSON.stringify(updatedEvents));
     setEvent(updatedEvent);
   };
 
@@ -55,14 +69,16 @@ export default function EventDetail() {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      console.error('Failed to copy URL:', err);
+      console.error("Failed to copy URL:", err);
     }
   };
   if (!event) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground text-lg mb-4">イベントが見つかりません</p>
+          <p className="text-muted-foreground text-lg mb-4">
+            イベントが見つかりません
+          </p>
           <Link href="/">
             <Button variant="outline">ホームに戻る</Button>
           </Link>
@@ -73,11 +89,11 @@ export default function EventDetail() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "short",
     });
   };
 
@@ -97,9 +113,9 @@ export default function EventDetail() {
 
   const getAllDates = () => {
     const allDates = new Set(event.proposedDates);
-    Object.values(event.participants).forEach(participant => {
+    Object.values(event.participants).forEach((participant) => {
       if (participant.additionalDates) {
-        participant.additionalDates.forEach(date => allDates.add(date));
+        participant.additionalDates.forEach((date) => allDates.add(date));
       }
     });
     return Array.from(allDates).sort();
@@ -108,16 +124,16 @@ export default function EventDetail() {
   const getMostPopularDate = () => {
     const allDates = getAllDates();
     let maxCount = 0;
-    let popularDate = '';
-    
-    allDates.forEach(date => {
+    let popularDate = "";
+
+    allDates.forEach((date) => {
       const count = getParticipantsForDate(date).length;
       if (count > maxCount) {
         maxCount = count;
         popularDate = date;
       }
     });
-    
+
     return { date: popularDate, count: maxCount };
   };
 
@@ -154,16 +170,20 @@ export default function EventDetail() {
           <CardContent>
             <div className="flex items-center space-x-2">
               <div className="flex-1 p-2 bg-muted/20 rounded border text-sm text-muted-foreground">
-                {typeof window !== 'undefined' ? window.location.href : ''}
+                {typeof window !== "undefined" ? window.location.href : ""}
               </div>
               <Button
                 onClick={handleCopyUrl}
                 variant="outline"
                 size="sm"
-                className={copySuccess ? 'bg-green-50 text-green-700 border-green-200' : ''}
+                className={
+                  copySuccess
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : ""
+                }
               >
                 <Copy className="w-4 h-4 mr-1" />
-                {copySuccess ? 'コピー済み!' : 'コピー'}
+                {copySuccess ? "コピー済み!" : "コピー"}
               </Button>
             </div>
           </CardContent>
@@ -172,13 +192,15 @@ export default function EventDetail() {
           <div className="bg-accent/10 border border-accent/30 rounded-lg p-6 mb-8">
             <div className="flex items-center mb-2">
               <Check className="w-6 h-6 text-accent-foreground mr-2" />
-              <h2 className="text-xl font-semibold text-accent-foreground">確定した日程</h2>
+              <h2 className="text-xl font-semibold text-accent-foreground">
+                確定した日程
+              </h2>
             </div>
             <p className="text-2xl font-bold text-accent-foreground mb-2">
               {formatDate(event.finalDate)}
             </p>
             <p className="text-accent-foreground">
-              参加者: {getParticipantsForDate(event.finalDate).join('、')}
+              参加者: {getParticipantsForDate(event.finalDate).join("、")}
             </p>
           </div>
         )}
@@ -193,7 +215,9 @@ export default function EventDetail() {
                   <CardTitle className="text-lg">イベント詳細</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-card-foreground whitespace-pre-wrap">{event.description}</p>
+                  <p className="text-card-foreground whitespace-pre-wrap">
+                    {event.description}
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -202,26 +226,25 @@ export default function EventDetail() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">候補日と参加状況</CardTitle>
-                <CardDescription>
-                  各候補日の参加者一覧
-                </CardDescription>
+                <CardDescription>各候補日の参加者一覧</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {getAllDates().map((date, index) => {
                     const participants = getParticipantsForDate(date);
                     const isOriginal = event.proposedDates.includes(date);
-                    const isMostPopular = date === mostPopular.date && participants.length > 0;
-                    
+                    const isMostPopular =
+                      date === mostPopular.date && participants.length > 0;
+
                     return (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className={`border rounded-lg p-4 ${
-                          event.finalDate === date 
-                            ? 'bg-accent/10 border-accent/30' 
-                            : isMostPopular 
-                              ? 'bg-primary/10 border-primary/30'
-                              : 'bg-muted/10 border-border'
+                          event.finalDate === date
+                            ? "bg-accent/10 border-accent/30"
+                            : isMostPopular
+                            ? "bg-primary/10 border-primary/30"
+                            : "bg-muted/10 border-border"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -253,7 +276,8 @@ export default function EventDetail() {
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Users className="w-4 h-4 mr-1" />
-                          {participants.length}人: {participants.join('、') || 'まだ参加者がいません'}
+                          {participants.length}人:{" "}
+                          {participants.join("、") || "まだ参加者がいません"}
                         </div>
                       </div>
                     );
@@ -269,7 +293,10 @@ export default function EventDetail() {
             <Card>
               <CardContent className="pt-6">
                 <Link href={`/event/${event.id}/participate`}>
-                  <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button
+                    size="lg"
+                    className="w-full bg-primary hover:bg-primary/90 text-secondary-foreground"
+                  >
                     参加登録・回答
                   </Button>
                 </Link>
@@ -284,25 +311,35 @@ export default function EventDetail() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">候補日数</span>
-                  <span className="font-semibold">{getAllDates().length}日</span>
+                  <span className="font-semibold">
+                    {getAllDates().length}日
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">参加予定者</span>
                   <span className="font-semibold">
-                    {Object.keys(event.participants).length - notAttendingParticipants.length}人
+                    {Object.keys(event.participants).length -
+                      notAttendingParticipants.length}
+                    人
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">不参加者</span>
-                  <span className="font-semibold">{notAttendingParticipants.length}人</span>
+                  <span className="font-semibold">
+                    {notAttendingParticipants.length}人
+                  </span>
                 </div>
                 {mostPopular.count > 0 && (
                   <div className="pt-2 border-t">
-                    <p className="text-sm text-muted-foreground mb-1">最も人気の日程</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      最も人気の日程
+                    </p>
                     <p className="font-semibold text-primary">
                       {formatDate(mostPopular.date)}
                     </p>
-                    <p className="text-sm text-muted-foreground">{mostPopular.count}人が参加可能</p>
+                    <p className="text-sm text-muted-foreground">
+                      {mostPopular.count}人が参加可能
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -312,7 +349,9 @@ export default function EventDetail() {
             {notAttendingParticipants.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg text-destructive">不参加者</CardTitle>
+                  <CardTitle className="text-lg text-destructive">
+                    不参加者
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">

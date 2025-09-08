@@ -12,15 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { ArrowLeft, Calendar as CalendarIcon, X } from "lucide-react";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { CalendarDialog } from "../compnents/CalendarDialog";
 
 export default function CreateEvent() {
   const router = useRouter();
@@ -29,19 +23,21 @@ export default function CreateEvent() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date && selectedDates.length < 5) {
-      const dateString = date.toISOString().split("T")[0];
-      const existingDate = selectedDates.find(
-        (d) => d.toISOString().split("T")[0] === dateString
-      );
+  const handleDateSelect = (dates: Date[] | undefined) => {
+    if (!dates) return;
 
-      if (!existingDate) {
-        setSelectedDates([...selectedDates, date]);
-      }
-    }
+    // 最大5日制限
+    const limitedDates = dates.slice(0, 5);
 
-    if (selectedDates.length + 1 >= 5) {
+    // 既存候補日を除外
+    const filteredDates = limitedDates.filter((d) => {
+      const dateString = d.toISOString().split("T")[0];
+      return !getAllProposedDates().includes(dateString);
+    });
+
+    setSelectedDates(filteredDates);
+
+    if (filteredDates.length >= 5) {
       setShowCalendar(false);
     }
   };
@@ -49,6 +45,10 @@ export default function CreateEvent() {
   const removeDateAt = (index: number) => {
     setSelectedDates(selectedDates.filter((_, i) => i !== index));
   };
+
+  // ✅ 追加: すでに選択された日付を文字列で返す
+  const getAllProposedDates = () =>
+    selectedDates.map((d) => d.toISOString().split("T")[0]);
 
   const handleSubmit = () => {
     if (!title.trim() || selectedDates.length === 0) {
@@ -61,9 +61,7 @@ export default function CreateEvent() {
       id: eventId,
       title: title.trim(),
       description: description.trim(),
-      proposedDates: selectedDates.map(
-        (date) => date.toISOString().split("T")[0]
-      ),
+      proposedDates: getAllProposedDates(),
       participants: {},
       createdAt: new Date().toISOString(),
     };
@@ -199,7 +197,7 @@ export default function CreateEvent() {
               onClick={handleSubmit}
               disabled={!title.trim() || selectedDates.length === 0}
               size="lg"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full bg-primary hover:bg-primary/90 text-secondary-foreground"
             >
               イベントを作成する
             </Button>
@@ -208,59 +206,17 @@ export default function CreateEvent() {
       </div>
 
       {/* Calendar Modal */}
-      <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>候補日を選択</DialogTitle>
-          </DialogHeader>
-
-          {/* 高さを固定してカレンダーが動かないようにする */}
-          <div className="flex justify-center py-4 min-h-[360px]">
-            <Calendar
-              mode="single"
-              selected={undefined}
-              onSelect={handleDateSelect}
-              disabled={(date) =>
-                date < new Date() || selectedDates.length >= 5
-              }
-              className="rounded-md border"
-            />
-          </div>
-
-          {/* 選択された候補日のリスト */}
-          {selectedDates.length > 0 && (
-            <div className="mt-4 max-h-40 overflow-y-auto">
-              <h4 className="text-sm font-medium text-foreground mb-2">
-                選択された候補日
-              </h4>
-              <div className="space-y-2">
-                {selectedDates.map((date, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-2"
-                  >
-                    <span className="text-primary-foreground">
-                      {formatDate(date)}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeDateAt(index)}
-                      className="text-primary hover:text-primary/80 p-1"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <p className="text-sm text-muted-foreground mt-2">
-            選択済み: {selectedDates.length}/5日
-          </p>
-        </DialogContent>
-      </Dialog>
+      <CalendarDialog
+        open={showCalendar}
+        onOpenChange={setShowCalendar}
+        selectedDates={selectedDates}
+        onDateSelect={handleDateSelect}
+        onRemoveDate={removeDateAt}
+        onConfirm={() => setShowCalendar(false)}
+        formatDate={formatDate}
+        maxSelectable={5}
+        getAllProposedDates={getAllProposedDates} // ✅ 渡す
+      />
     </div>
   );
 }
