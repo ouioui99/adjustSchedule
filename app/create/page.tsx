@@ -15,29 +15,39 @@ import {
 import { ArrowLeft, Calendar as CalendarIcon, X } from "lucide-react";
 import Link from "next/link";
 import { CalendarDialog } from "../compnents/CalendarDialog";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("Asia/Tokyo");
 
 export default function CreateEvent() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]); // YYYY-MM-DD
   const [showCalendar, setShowCalendar] = useState(false);
 
-  const handleDateSelect = (dates: Date[] | undefined) => {
-    if (!dates) return;
-
+  // CalendarDialogからの返却をstring[]で受け取る
+  const handleDateSelect = (dates: string[]) => {
     // 最大5日制限
     const limitedDates = dates.slice(0, 5);
 
     // 既存候補日を除外
-    const filteredDates = limitedDates.filter((d) => {
-      const dateString = d.toISOString().split("T")[0];
-      return !getAllProposedDates().includes(dateString);
-    });
+    const filteredDates = limitedDates.filter(
+      (d) => !getAllProposedDates().includes(d)
+    );
 
-    setSelectedDates(filteredDates);
+    // カレンダー順にソート
+    const sortedDates = filteredDates.sort((a, b) =>
+      dayjs(a).isBefore(dayjs(b)) ? -1 : 1
+    );
 
-    if (filteredDates.length >= 5) {
+    setSelectedDates(sortedDates);
+
+    if (sortedDates.length >= 5) {
       setShowCalendar(false);
     }
   };
@@ -46,9 +56,7 @@ export default function CreateEvent() {
     setSelectedDates(selectedDates.filter((_, i) => i !== index));
   };
 
-  // ✅ 追加: すでに選択された日付を文字列で返す
-  const getAllProposedDates = () =>
-    selectedDates.map((d) => d.toISOString().split("T")[0]);
+  const getAllProposedDates = () => [...selectedDates];
 
   const handleSubmit = () => {
     if (!title.trim() || selectedDates.length === 0) {
@@ -61,9 +69,9 @@ export default function CreateEvent() {
       id: eventId,
       title: title.trim(),
       description: description.trim(),
-      proposedDates: getAllProposedDates(),
+      proposedDates: selectedDates,
       participants: {},
-      createdAt: new Date().toISOString(),
+      createdAt: dayjs().toISOString(),
     };
 
     const existingEvents = JSON.parse(localStorage.getItem("events") || "[]");
@@ -73,13 +81,8 @@ export default function CreateEvent() {
     router.push(`/event/${eventId}`);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short",
-    });
+  const formatDate = (dateString: string) => {
+    return dayjs(dateString).tz("Asia/Tokyo").format("YYYY年M月D日 (ddd)");
   };
 
   return (
@@ -209,13 +212,13 @@ export default function CreateEvent() {
       <CalendarDialog
         open={showCalendar}
         onOpenChange={setShowCalendar}
-        selectedDates={selectedDates}
-        onDateSelect={handleDateSelect}
+        selectedDates={selectedDates} // string[]
+        onDateSelect={handleDateSelect} // string[]
         onRemoveDate={removeDateAt}
         onConfirm={() => setShowCalendar(false)}
         formatDate={formatDate}
         maxSelectable={5}
-        getAllProposedDates={getAllProposedDates} // ✅ 渡す
+        getAllProposedDates={getAllProposedDates}
       />
     </div>
   );

@@ -22,7 +22,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { CalendarDialog } from "@/app/compnents/CalendarDialog";
-import { log } from "console";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("Asia/Tokyo");
 
 interface Event {
   id: string;
@@ -47,7 +53,7 @@ export default function Participate() {
   const [event, setEvent] = useState<Event | null>(null);
   const [nickname, setNickname] = useState("");
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
-  const [additionalDates, setAdditionalDates] = useState<Date[]>([]);
+  const [additionalDates, setAdditionalDates] = useState<string[]>([]);
   const [notAttending, setNotAttending] = useState(false);
   const [reason, setReason] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
@@ -66,18 +72,14 @@ export default function Participate() {
     }
   };
 
-  // 追加日程の選択
+  // 追加日程の選択（dayjs対応）
   const handleAdditionalDateSelect = (dates: Date[] | undefined) => {
     if (!dates) return;
 
-    // 最大3日制限
-    const limitedDates = dates.slice(0, 3);
-
-    // 既存候補日や既に選択済みを除外
-    const filteredDates = limitedDates.filter((d) => {
-      const dateString = d.toISOString().split("T")[0];
-      return !getAllProposedDates().includes(dateString);
-    });
+    const limitedDates = dates.slice(0, 3); // 最大3日
+    const filteredDates = limitedDates
+      .map((d) => dayjs(d).tz("Asia/Tokyo").format("YYYY-MM-DD"))
+      .filter((dateStr) => !getAllProposedDates().includes(dateStr));
 
     setAdditionalDates(filteredDates);
   };
@@ -111,9 +113,7 @@ export default function Participate() {
 
     const participantData = {
       availableDates: selectedDates,
-      additionalDates: additionalDates.map(
-        (date) => date.toISOString().split("T")[0]
-      ),
+      additionalDates,
       notAttending,
       ...(notAttending && reason.trim() && { reason: reason.trim() }),
     };
@@ -135,23 +135,19 @@ export default function Participate() {
     router.push(`/event/${event.id}`);
   };
 
+  // 日付フォーマット（dayjs版）
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short",
-    });
+    return dayjs(dateString)
+      .tz("Asia/Tokyo")
+      .locale("ja")
+      .format("YYYY年M月D日（ddd）");
   };
 
   const formatDateFromDate = (date: Date) => {
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "short",
-    });
+    return dayjs(date)
+      .tz("Asia/Tokyo")
+      .locale("ja")
+      .format("YYYY年M月D日（ddd）");
   };
 
   if (!event) {
@@ -198,7 +194,11 @@ export default function Participate() {
         participant.additionalDates.forEach((date) => allDates.add(date));
       }
     });
-    return Array.from(allDates).sort();
+    return Array.from(allDates).sort(
+      (a, b) =>
+        dayjs(a).tz("Asia/Tokyo").valueOf() -
+        dayjs(b).tz("Asia/Tokyo").valueOf()
+    );
   };
 
   return (
@@ -353,7 +353,7 @@ export default function Participate() {
                             className="flex items-center justify-between bg-secondary/10 border border-secondary/30 rounded-lg px-3 py-2"
                           >
                             <span className="text-primary-foreground">
-                              {formatDateFromDate(date)}
+                              {formatDate(date)}
                             </span>
                             <Button
                               variant="ghost"
@@ -402,12 +402,12 @@ export default function Participate() {
             <CalendarDialog
               open={showCalendar}
               onOpenChange={setShowCalendar}
-              selectedDates={additionalDates}
-              onDateSelect={handleAdditionalDateSelect}
+              selectedDates={additionalDates} // string[]
+              onDateSelect={(dates: string[]) => setAdditionalDates(dates)} // string[]
               onRemoveDate={removeAdditionalDate}
               onConfirm={handleConfirm}
-              formatDate={formatDateFromDate}
-              maxSelectable={3} // ← 参加画面は最大3日
+              formatDate={formatDate} // string → string
+              maxSelectable={3}
               getAllProposedDates={getAllProposedDates}
             />
           </div>
