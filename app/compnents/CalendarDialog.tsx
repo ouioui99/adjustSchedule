@@ -68,11 +68,19 @@ export function CalendarDialog({
   const disabledDate = (date: Date) => {
     const dateStr = dayjs(date).tz("Asia/Tokyo").format("YYYY-MM-DD");
     const todayStr = dayjs().tz("Asia/Tokyo").format("YYYY-MM-DD");
-    return (
-      dateStr < todayStr || // 過去日
-      selectedDates.length >= maxSelectable || // 選択上限
-      getAllProposedDates().includes(dateStr) // 既存候補日
-    );
+    // maxSelectableが3の場合は既存候補日も選択不可
+    if (maxSelectable === 3) {
+      return (
+        dateStr < todayStr || // 過去日
+        selectedDates.length >= maxSelectable || // 選択上限
+        getAllProposedDates().includes(dateStr) // 既存候補日
+      );
+    } else {
+      return (
+        dateStr < todayStr || // 過去日
+        selectedDates.length >= maxSelectable // 選択上限
+      );
+    }
   };
 
   return (
@@ -89,11 +97,27 @@ export function CalendarDialog({
               dayjs(d).tz("Asia/Tokyo").toDate()
             )}
             onSelect={(dates: Date[] | undefined) => {
-              if (!dates) return;
-              const dateStrings = dates.map((d) =>
+              if (!dates) {
+                onDateSelect([]);
+                return;
+              }
+
+              // Date[] を string[] (YYYY-MM-DD) に変換
+              let dateStrings = dates.map((d) =>
                 dayjs(d).tz("Asia/Tokyo").format("YYYY-MM-DD")
               );
-              onDateSelect(dateStrings);
+
+              // 上限を超えたら古い方を削除
+              if (dateStrings.length > maxSelectable) {
+                dateStrings = dateStrings.slice(-maxSelectable);
+              }
+
+              // カレンダー順にソート
+              const sortedDates = dateStrings.sort((a, b) =>
+                dayjs(a).isBefore(dayjs(b)) ? -1 : 1
+              );
+
+              onDateSelect(sortedDates);
             }}
             disabled={disabledDate}
           />

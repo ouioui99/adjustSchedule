@@ -18,6 +18,7 @@ import { CalendarDialog } from "../compnents/CalendarDialog";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { log } from "console";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -32,22 +33,11 @@ export default function CreateEvent() {
 
   // CalendarDialogからの返却をstring[]で受け取る
   const handleDateSelect = (dates: string[]) => {
-    // 最大5日制限
-    const limitedDates = dates.slice(0, 5);
+    console.log("Selected dates:", dates);
 
-    // 既存候補日を除外
-    const filteredDates = limitedDates.filter(
-      (d) => !getAllProposedDates().includes(d)
-    );
+    setSelectedDates(dates);
 
-    // カレンダー順にソート
-    const sortedDates = filteredDates.sort((a, b) =>
-      dayjs(a).isBefore(dayjs(b)) ? -1 : 1
-    );
-
-    setSelectedDates(sortedDates);
-
-    if (sortedDates.length >= 5) {
+    if (dates.length >= 5) {
       setShowCalendar(false);
     }
   };
