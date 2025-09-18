@@ -18,7 +18,6 @@ import { CalendarDialog } from "../compnents/CalendarDialog";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { log } from "console";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,14 +26,13 @@ dayjs.tz.setDefault("Asia/Tokyo");
 export default function CreateEvent() {
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [nickname, setNickname] = useState(""); // ホストのニックネーム
   const [description, setDescription] = useState("");
   const [selectedDates, setSelectedDates] = useState<string[]>([]); // YYYY-MM-DD
   const [showCalendar, setShowCalendar] = useState(false);
 
   // CalendarDialogからの返却をstring[]で受け取る
   const handleDateSelect = (dates: string[]) => {
-    console.log("Selected dates:", dates);
-
     setSelectedDates(dates);
 
     if (dates.length >= 5) {
@@ -58,6 +56,7 @@ export default function CreateEvent() {
     const newEvent = {
       id: eventId,
       title: title.trim(),
+      hostNickname: nickname.trim(),
       description: description.trim(),
       proposedDates: selectedDates,
       participants: {},
@@ -109,6 +108,19 @@ export default function CreateEvent() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="例：忘年会、プロジェクト会議"
+                  className="w-full"
+                />
+              </div>
+
+              {/* ホストのニックネーム */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  あなたのニックネーム <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="例：ほりやす、こそこそセット"
                   className="w-full"
                 />
               </div>

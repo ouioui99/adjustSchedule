@@ -36,6 +36,7 @@ interface Event {
   };
   finalDate?: string;
   createdAt: string;
+  hostNickname: string;
 }
 
 export default function EventDetail() {
@@ -100,6 +101,10 @@ export default function EventDetail() {
   // Calculate participants for each date
   const getParticipantsForDate = (dateString: string) => {
     const participants: string[] = [];
+    if (event.proposedDates.includes(dateString)) {
+      participants.push(event.hostNickname + " (ホスト)"); // ホストも参加者に含める
+    }
+
     Object.entries(event.participants).forEach(([nickname, data]) => {
       if (data.availableDates.includes(dateString)) {
         participants.push(nickname);
@@ -108,6 +113,8 @@ export default function EventDetail() {
         participants.push(nickname);
       }
     });
+    console.log("Participants for", dateString, ":", participants);
+
     return participants;
   };
 
@@ -318,7 +325,8 @@ export default function EventDetail() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">参加予定者</span>
                   <span className="font-semibold">
-                    {Object.keys(event.participants).length -
+                    {Object.keys(event.participants).length +
+                      1 -
                       notAttendingParticipants.length}
                     人
                   </span>
