@@ -67,7 +67,7 @@ export default function Home() {
           <Link href="/create">
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-secondary-foreground px-8 py-3"
+              className="bg-primary hover:bg-primary/90 text-secondary-foreground px-4 sm:px-8 py-3 text-base sm:text-lg w-full sm:w-auto"
             >
               <Plus className="w-5 h-5 mr-2" />
               新しいイベントを作成
@@ -77,83 +77,100 @@ export default function Home() {
 
         {/* Events List */}
         {events.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground mb-6">
+          <div className="space-y-6">
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-6 break-words">
               作成されたイベント
             </h2>
             {events.map((event) => (
               <Card
                 key={event.id}
-                className="hover:shadow-md transition-shadow"
+                className="hover:shadow-md transition-shadow max-w-full overflow-hidden"
               >
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl text-card-foreground">
+                  <div className="flex flex-col sm:flex-row justify-between items-start flex-wrap gap-2 sm:gap-4 w-full">
+                    <div className="w-full sm:w-auto break-words">
+                      <CardTitle className="text-lg sm:text-2xl font-semibold text-card-foreground break-words">
                         {event.title}
                       </CardTitle>
                       {event.description && (
-                        <CardDescription className="mt-2 text-muted-foreground">
+                        <CardDescription className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground break-words">
                           {event.description}
                         </CardDescription>
                       )}
                     </div>
                     {event.finalDate && (
-                      <div className="bg-accent/20 text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">
+                      <div className="bg-accent/20 text-destructive px-3 py-1 rounded-full text-xs sm:text-sm font-medium mt-2 sm:mt-0">
                         確定済み
                       </div>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-6 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      候補日: {event.proposedDates.length}日
+                <CardContent className="w-full max-w-full">
+                  {/* 候補日・参加者 */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 text-sm sm:text-base text-muted-foreground mb-4">
+                    <div className="flex items-center flex-wrap gap-1">
+                      <Calendar className="w-4 sm:w-5 h-4 sm:h-5" />
+                      <span className="font-medium">
+                        候補日: {event.proposedDates.length}日
+                      </span>
                     </div>
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      参加者: {Object.keys(event.participants).length}人
+                    <div className="flex items-center flex-wrap gap-1">
+                      <Users className="w-4 sm:w-5 h-4 sm:h-5" />
+                      <span className="font-medium">
+                        参加者: {Object.keys(event.participants).length + 1}人
+                      </span>
                     </div>
                   </div>
 
+                  {/* 確定日 or 候補日リスト */}
                   {event.finalDate ? (
-                    <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-accent-foreground font-medium">
+                    <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 sm:p-4 mb-4 w-full max-w-full break-words">
+                      <p className="text-sm sm:text-base text-foreground font-medium">
                         確定した日程
                       </p>
-                      <p className="text-lg font-semibold text-accent-foreground mt-1">
+                      <p className="text-lg sm:text-xl font-bold text-foreground mt-1 break-words">
                         {formatDate(event.finalDate)}
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-                      {event.proposedDates.slice(0, 3).map((date, index) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 mb-4 w-full max-w-full">
+                      {event.proposedDates.slice(0, 4).map((date, index) => (
                         <div
                           key={index}
-                          className="text-sm text-muted-foreground bg-muted/20 rounded px-2 py-1"
+                          className="text-sm sm:text-base text-muted-foreground bg-muted/20 rounded px-2 py-1 font-medium truncate w-full"
                         >
                           {formatDate(date)}
                         </div>
                       ))}
-                      {event.proposedDates.length > 3 && (
-                        <div className="text-sm text-muted-foreground">
-                          他 {event.proposedDates.length - 3} 日...
+                      {event.proposedDates.length > 4 && (
+                        <div className="text-sm sm:text-base text-muted-foreground font-medium w-full truncate">
+                          他 {event.proposedDates.length - 4} 日...
                         </div>
                       )}
                     </div>
                   )}
 
-                  <div className="flex space-x-3">
-                    <Link href={`/event/${event.id}`}>
-                      <Button variant="outline" size="sm">
+                  {/* ボタン */}
+                  <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full">
+                    <Link
+                      href={`/event/${event.id}`}
+                      className="w-full sm:w-auto"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto text-sm sm:text-base"
+                      >
                         詳細を見る
                       </Button>
                     </Link>
-                    <Link href={`/event/${event.id}/participate`}>
+                    <Link
+                      href={`/event/${event.id}/participate`}
+                      className="w-full sm:w-auto"
+                    >
                       <Button
                         size="sm"
-                        className="bg-primary hover:bg-primary/90 text-secondary-foreground"
+                        className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-secondary-foreground text-sm sm:text-base"
                       >
                         参加登録
                       </Button>
@@ -167,11 +184,11 @@ export default function Home() {
 
         {events.length === 0 && (
           <div className="text-center py-12">
-            <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg">
+            <Calendar className="w-12 sm:w-16 h-12 sm:h-16 mx-auto text-muted-foreground mb-4" />
+            <p className="text-base sm:text-lg text-muted-foreground">
               まだイベントが作成されていません
             </p>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">
               上のボタンから新しいイベントを作成してください
             </p>
           </div>

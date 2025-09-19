@@ -4,30 +4,37 @@
 
 @layer base {
   :root {
-    --background: #eff5fa;
-    --foreground: #141c33;
+    --background: #f8fafc; /* より白に近い青みがかったグレー */
+    --foreground: #1e293b; /* ダークネイビー寄りでコントラスト強化 */
     --card: #ffffff;
-    --card-foreground: #141c33;
+    --card-foreground: #1e293b;
     --popover: #ffffff;
-    --popover-foreground: #141c33;
-    --primary: #2f456f;
-    --primary-foreground: #141c33;
+    --popover-foreground: #1e293b;
+
+    --primary: #2f456f; /* ネイビーブルーを残す */
+    --primary-foreground: #ffffff; /* ボタンや強調テキストを見やすく */
     --secondary: #5374ac;
     --secondary-foreground: #ffffff;
-    --muted: #8bafd0;
-    --muted-foreground: #2f456f;
+
+    --muted: #e2e8f0; /* よりグレー寄りに調整 */
+    --muted-foreground: #475569; /* 落ち着いたブルーグレー */
+
     --accent: #5374ac;
     --accent-foreground: #ffffff;
+
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
-    --border: #d1d5db;
-    --input: #f3f4f6;
+
+    --border: #dbeafe; /* 少し青みを持たせた枠線 */
+    --input: #f1f5f9;
     --ring: #2f456f;
+
     --chart-1: #2f456f;
     --chart-2: #5374ac;
     --chart-3: #8bafd0;
-    --chart-4: #eff5fa;
-    --chart-5: #141c33;
+    --chart-4: #e0f2fe;
+    --chart-5: #1e293b;
+
     --radius: 0.5rem;
   }
 
@@ -39,7 +46,6 @@
     --popover: #2f456f;
     --popover-foreground: #eff5fa;
     --primary: #8bafd0;
-    /* --primary-foreground: #141c33; */
     --primary-foreground: #f1f5f9;
     --secondary: #5374ac;
     --secondary-foreground: #141c33;

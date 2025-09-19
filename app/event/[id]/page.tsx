@@ -128,23 +128,38 @@ export default function EventDetail() {
     return Array.from(allDates).sort();
   };
 
-  const getMostPopularDate = () => {
+  // 複数の最多参加日程を返す
+  const getMostPopularDates = () => {
     const allDates = getAllDates();
     let maxCount = 0;
-    let popularDate = "";
+    let popularDates: string[] = [];
 
     allDates.forEach((date) => {
       const count = getParticipantsForDate(date).length;
       if (count > maxCount) {
         maxCount = count;
-        popularDate = date;
+        popularDates = [date];
+      } else if (count === maxCount && count > 0) {
+        popularDates.push(date);
       }
     });
 
-    return { date: popularDate, count: maxCount };
+    return { dates: popularDates, count: maxCount };
   };
 
-  const mostPopular = getMostPopularDate();
+  const getSortedDates = () => {
+    const allDates = getAllDates();
+    const popularSet = new Set(mostPopular.dates);
+
+    // 最多参加日程を先頭に、残りをカレンダー順に
+    return [
+      ...mostPopular.dates.sort(), // 最多参加の日程も一応日付順に並べる
+      ...allDates.filter((d) => !popularSet.has(d)), // その他の日程
+    ];
+  };
+
+  const mostPopular = getMostPopularDates();
+
   const notAttendingParticipants = Object.entries(event.participants)
     .filter(([_, data]) => data.notAttending)
     .map(([nickname, _]) => nickname);
@@ -195,21 +210,25 @@ export default function EventDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Confirmed Date */}
         {event.finalDate && (
-          <div className="bg-accent/10 border border-accent/30 rounded-lg p-6 mb-8">
-            <div className="flex items-center mb-2">
-              <Check className="w-6 h-6 text-accent-foreground mr-2" />
-              <h2 className="text-xl font-semibold text-accent-foreground">
+          <Card className="mb-8 border-accent/30">
+            <CardHeader>
+              <CardTitle className="flex items-center text-foreground">
+                <Check className="w-5 h-5 mr-2" />
                 確定した日程
-              </h2>
-            </div>
-            <p className="text-2xl font-bold text-accent-foreground mb-2">
-              {formatDate(event.finalDate)}
-            </p>
-            <p className="text-accent-foreground">
-              参加者: {getParticipantsForDate(event.finalDate).join("、")}
-            </p>
-          </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground mb-2">
+                {formatDate(event.finalDate)}
+              </p>
+              <p className="text-muted-foreground">
+                参加者: {getParticipantsForDate(event.finalDate).join("、")}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -229,7 +248,6 @@ export default function EventDetail() {
               </Card>
             )}
 
-            {/* Date Options */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">候補日と参加状況</CardTitle>
@@ -237,36 +255,39 @@ export default function EventDetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {getAllDates().map((date, index) => {
+                  {getSortedDates().map((date, index) => {
                     const participants = getParticipantsForDate(date);
                     const isOriginal = event.proposedDates.includes(date);
                     const isMostPopular =
-                      date === mostPopular.date && participants.length > 0;
+                      mostPopular.dates.includes(date) &&
+                      participants.length > 0;
 
                     return (
                       <div
                         key={index}
-                        className={`border rounded-lg p-4 ${
+                        className={`relative rounded-lg p-4 transition ${
                           event.finalDate === date
-                            ? "bg-accent/10 border-accent/30"
+                            ? "bg-accent/10 border border-accent/50"
                             : isMostPopular
-                            ? "bg-primary/10 border-primary/30"
-                            : "bg-muted/10 border-border"
+                            ? "bg-primary/5 border-2 border-primary shadow-sm"
+                            : "bg-muted/10 border border-border"
                         }`}
                       >
+                        {/* Crown Badge for Most Popular */}
+                        {isMostPopular && !event.finalDate && (
+                          <div className="absolute -top-3 -left-3 bg-primary text-primary-foreground rounded-full p-1 shadow">
+                            <Crown className="w-4 h-4" />
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <h3 className="font-semibold text-card-foreground">
                               {formatDate(date)}
                             </h3>
                             {!isOriginal && (
-                              <span className="bg-secondary/20 text-secondary-foreground text-xs px-2 py-1 rounded-full">
+                              <span className="bg-secondary/20 text-foreground text-xs px-2 py-1 rounded-full">
                                 追加提案
-                              </span>
-                            )}
-                            {isMostPopular && !event.finalDate && (
-                              <span className="bg-primary/20 text-primary-foreground text-xs px-2 py-1 rounded-full">
-                                最多参加
                               </span>
                             )}
                           </div>
@@ -343,7 +364,7 @@ export default function EventDetail() {
                       最も人気の日程
                     </p>
                     <p className="font-semibold text-primary">
-                      {formatDate(mostPopular.date)}
+                      {formatDate(mostPopular.dates[0])}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {mostPopular.count}人が参加可能
