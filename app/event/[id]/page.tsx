@@ -190,18 +190,21 @@ export default function EventDetail() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 p-2 bg-muted/20 rounded border text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+              {/* URL表示部分 */}
+              <div className="w-full sm:flex-1 p-2 bg-muted/20 rounded border text-sm text-muted-foreground break-words">
                 {typeof window !== "undefined" ? window.location.href : ""}
               </div>
+
+              {/* コピー用ボタン */}
               <Button
                 onClick={handleCopyUrl}
                 variant="outline"
                 size="sm"
                 className={
                   copySuccess
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : ""
+                    ? "bg-green-50 text-green-700 border-green-200 w-full sm:w-auto"
+                    : "w-full sm:w-auto"
                 }
               >
                 <Copy className="w-4 h-4 mr-1" />
