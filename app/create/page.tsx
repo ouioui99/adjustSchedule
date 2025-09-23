@@ -18,6 +18,8 @@ import { CalendarDialog } from "../compnents/CalendarDialog";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // 追加
+import { db } from "../firebaseApp";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -28,13 +30,11 @@ export default function CreateEvent() {
   const [title, setTitle] = useState("");
   const [nickname, setNickname] = useState(""); // ホストのニックネーム
   const [description, setDescription] = useState("");
-  const [selectedDates, setSelectedDates] = useState<string[]>([]); // YYYY-MM-DD
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // CalendarDialogからの返却をstring[]で受け取る
   const handleDateSelect = (dates: string[]) => {
     setSelectedDates(dates);
-
     if (dates.length >= 5) {
       setShowCalendar(false);
     }
@@ -46,28 +46,27 @@ export default function CreateEvent() {
 
   const getAllProposedDates = () => [...selectedDates];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim() || selectedDates.length === 0) {
       alert("イベント名と候補日を入力してください");
       return;
     }
 
-    const eventId = Date.now().toString();
-    const newEvent = {
-      id: eventId,
-      title: title.trim(),
-      hostNickname: nickname.trim(),
-      description: description.trim(),
-      proposedDates: selectedDates,
-      participants: {},
-      createdAt: dayjs().toISOString(),
-    };
+    try {
+      const docRef = await addDoc(collection(db, "events"), {
+        title: title.trim(),
+        hostNickname: nickname.trim(),
+        description: description.trim(),
+        proposedDates: selectedDates,
+        participants: {},
+        createdAt: serverTimestamp(),
+      });
 
-    const existingEvents = JSON.parse(localStorage.getItem("events") || "[]");
-    existingEvents.push(newEvent);
-    localStorage.setItem("events", JSON.stringify(existingEvents));
-
-    router.push(`/event/${eventId}`);
+      router.push(`/event/${docRef.id}`);
+    } catch (error) {
+      console.error("Error adding event: ", error);
+      alert("イベントの作成に失敗しました。");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -112,7 +111,6 @@ export default function CreateEvent() {
                 />
               </div>
 
-              {/* ホストのニックネーム */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   あなたのニックネーム <span className="text-red-500">*</span>
@@ -149,7 +147,6 @@ export default function CreateEvent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Selected Dates */}
               {selectedDates.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-foreground mb-2">
@@ -178,7 +175,6 @@ export default function CreateEvent() {
                 </div>
               )}
 
-              {/* Calendar Toggle (open modal) */}
               <Button
                 variant="outline"
                 onClick={() => setShowCalendar(true)}
@@ -196,7 +192,6 @@ export default function CreateEvent() {
             </CardContent>
           </Card>
 
-          {/* Submit Button */}
           <div className="pt-4">
             <Button
               onClick={handleSubmit}
@@ -210,12 +205,11 @@ export default function CreateEvent() {
         </div>
       </div>
 
-      {/* Calendar Modal */}
       <CalendarDialog
         open={showCalendar}
         onOpenChange={setShowCalendar}
-        selectedDates={selectedDates} // string[]
-        onDateSelect={handleDateSelect} // string[]
+        selectedDates={selectedDates}
+        onDateSelect={handleDateSelect}
         onRemoveDate={removeDateAt}
         onConfirm={() => setShowCalendar(false)}
         formatDate={formatDate}

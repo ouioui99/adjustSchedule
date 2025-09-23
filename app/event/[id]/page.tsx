@@ -113,7 +113,6 @@ export default function EventDetail() {
         participants.push(nickname);
       }
     });
-    console.log("Participants for", dateString, ":", participants);
 
     return participants;
   };
